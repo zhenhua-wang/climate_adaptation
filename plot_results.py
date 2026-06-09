@@ -81,7 +81,7 @@ x_min, y_min, x_max, y_max = (
     fine_gdf["x"].max(), fine_gdf["y"].max(),
 )
 fig, axes = plt.subplots(6, 3, figsize=(18, 30))
-fig.suptitle("GCN-CVAE Reconstruction", fontsize=14, fontweight="bold")
+fig.suptitle("GCDAE Reconstruction", fontsize=14, fontweight="bold")
 for i, title in enumerate(feat_titles):
     original = X_orig[:, i].reshape(nrow_fine, ncol_fine)
     recon = X_hat[:, i].reshape(nrow_fine, ncol_fine)
