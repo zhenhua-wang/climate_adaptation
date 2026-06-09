@@ -10,9 +10,24 @@ from torch_geometric.utils import grid, get_laplacian, to_scipy_sparse_matrix
 
 
 def generate_grids(nrow_fine, ncol_fine, nrow_coarse, ncol_coarse):
+    """
+    Generates two-level spatial grids (fine and coarse) over the contiguous US in EPSG:5070.
+
+    Args:
+        nrow_fine (int): Number of rows in the fine grid.
+        ncol_fine (int): Number of columns in the fine grid.
+        nrow_coarse (int): Number of rows in the coarse grid.
+        ncol_coarse (int): Number of columns in the coarse grid.
+
+    Return:
+        fine_gdf (GeoDataFrame): Fine-scale grid with centroid coordinates and coarse_id.
+        coarse_gdf (GeoDataFrame): Coarse-scale grid.
+        edge_index (Tensor): Shape (2, E), graph structure of the fine grid.
+        L_fine (spmatrix): Graph Laplacian of the fine grid.
+    """
     # create fine scale grids
     x_edges = np.linspace(-2356114.0, 2258154.0, ncol_fine + 1)
-    y_edges = np.linspace( 268496.0,  3172666.0, nrow_fine + 1)
+    y_edges = np.linspace(268496.0, 3172666.0, nrow_fine + 1)
     cells = [
         box(x_edges[i], y_edges[j], x_edges[i+1], y_edges[j+1])
         for j in range(nrow_fine)
@@ -47,7 +62,15 @@ def generate_grids(nrow_fine, ncol_fine, nrow_coarse, ncol_coarse):
 
 def matern_continuous(coords, n_knots, length_scale):
     """
-    Matern nu=1.5 GP.
+    Samples a spatial random field using a Matérn nu=1.5 kernel approximation.
+
+    Args:
+        coords (Tensor): Shape (N, 2), spatial coordinates.
+        n_knots (int): Number of knot points sampled from coords.
+        length_scale (float): Length scale parameter.
+
+    Return:
+        Tensor: Shape (N,), spatial field.
     """
     knots = coords[torch.randperm(len(coords))[:n_knots]]
     w = torch.randn(n_knots)
@@ -61,7 +84,14 @@ def matern_continuous(coords, n_knots, length_scale):
 
 def car_graph(L, rho=0.9):
     """
-    Conditional Autoregressive (CAR) model.
+    Samples a spatial random field from a Conditional Autoregressive (CAR) model.
+
+    Args:
+        L (spmatrix): Graph Laplacian of the fine grid.
+        rho (float): Spatial autocorrelation strength.
+
+    Return:
+        Tensor: Shape (N,), CAR random field.
     """
     n = L.shape[0]
     A = scipy.sparse.diags(L.diagonal()) - L
@@ -75,6 +105,20 @@ def car_graph(L, rho=0.9):
 
 
 def make_mask(n, coarse_id, n_coarse, n_missing=5):
+    """
+    Creates a structured missing data mask over three feature columns,
+    where the first column is fully observed, and the second and third columns
+    each have n_missing randomly selected coarse regions masked out.
+
+    Args:
+        n (int): Number of fine-scale nodes.
+        coarse_id (ndarray): Shape (N,), coarse region index for each fine node.
+        n_coarse (int): Total number of coarse regions.
+        n_missing (int): Number of coarse regions to mask per column.
+
+    Returns:
+        ndarray: Shape (N, 3), true where features are observed.
+    """
     missing1 = np.random.choice(n_coarse, n_missing, replace=False)
     missing2 = np.random.choice(n_coarse, n_missing, replace=False)
     return np.stack([
@@ -84,6 +128,37 @@ def make_mask(n, coarse_id, n_coarse, n_missing=5):
     ], axis=1)
 
 def generate_synthetic_dataset(seed: int, config: dict, out_dir: str) -> str:
+    """
+    Constructs fine and coarse grids, simulates climate (Matérn) and socioeconomic
+    (CAR) spatial fields with a shared latent component, and produces three regression
+    targets with varying linear and nonlinear relationships. Structured missing patterns
+    are applied to both modalities. All outputs are saved to out_dir.
+
+    Args:
+        seed (int): Random seed for reproducibility.
+        config (dict): Configuration dictionary with keys:
+            - nrow_fine, ncol_fine (int): Fine grid dimensions.
+            - nrow_coarse, ncol_coarse (int): Coarse grid dimensions.
+            - n_knots (int): Number of knots for Matérn fields.
+            - latent_range (float, optional): Length scale for shared latent field.
+            - climate_ranges (tuple[float], optional): Length scales for climate fields.
+            - climate_common_frac (float, optional): Fraction of shared latent in climate fields.
+            - socio_rhos (tuple[float], optional): CAR autocorrelation values for socio fields.
+            - socio_common_frac (float, optional): Fraction of shared latent in socio fields.
+            - group_effect_std (float, optional): Std of coarse-level group effect.
+            - climate_weights1/2 (tuple[float], optional): Climate feature weights for y1/y2.
+            - socio_weights1/2 (tuple[float], optional): Socio feature weights for y1/y2.
+            - noise1, noise2 (float, optional): Noise std for targets.
+        out_dir (str): Path to output directory.
+
+    Save:
+        - fine_regions.gpkg: Fine grid with features and targets.
+        - coarse_regions.gpkg: Coarse grid.
+        - edge_index.pt: Fine grid graph structure.
+        - X_climate.pt, X_socio.pt: Feature tensors with missing values.
+        - mask_climate.pt, mask_socio.pt: Boolean observation masks.
+        - config.pt: Config dictionary.
+    """
     os.makedirs(out_dir, exist_ok=True)
     torch.manual_seed(seed)
     np.random.seed(seed)
