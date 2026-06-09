@@ -1,6 +1,4 @@
-import numpy as np
 import torch
-import matplotlib.pyplot as plt
 import geopandas as gpd
 import torch.nn.functional as F
 from py.rbf_gnn_fm import GCNDAE, spatial_rff
@@ -8,7 +6,7 @@ from py.rbf_gnn_fm import GCNDAE, spatial_rff
 seed = 1
 
 # load dataset
-data_dir="./data/synthetic"
+data_dir = "./data/synthetic"
 fine_gdf = gpd.read_file(f"{data_dir}/fine_regions.gpkg")
 coarse_gdf = gpd.read_file(f"{data_dir}/coarse_regions.gpkg")
 edge_index = torch.load(f"{data_dir}/edge_index.pt")
