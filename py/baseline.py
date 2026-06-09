@@ -16,6 +16,17 @@ def fit_tune_eval(model_fn, param_grid,
                   X_test, y_test):
     """
     Tune a model over a parameter grid on val set, retrain on train+val, and evaluate on test.
+
+    Args:
+        model_fn (callable): A sklearn-compatible model.
+        param_grid (list[dict]): List of parameter dicts to search over.
+        X_train, y_train: Training features and targets.
+        X_val, y_val: Validation features and targets.
+        X_test, y_test: Test features and targets.
+
+    Returns:
+        yhat_test: Shape (N_test, n_targets), predition results.
+        best_params: Parameter dict with lowest RMSE on validation dataset.
     """
     best_params, best_rmse = None, float("inf")
     for params in param_grid:
@@ -34,6 +45,14 @@ def fit_tune_eval(model_fn, param_grid,
 def graph_eigenbasis(edge_index, num_nodes, k=50):
     """
     Computes the k smallest eigenvectors of the graph Laplacian.
+
+    Args:
+        edge_index (Tensor): Shape (2, E), graph structure.
+        num_nodes (int): Number of nodes.
+        k (int): Number of eigenvectors.
+
+    Returns:
+        Tensor: Shape (N, k), graph eigenbasis.
     """
     lap_index, lap_weight = get_laplacian(
         edge_index, normalization="sym", num_nodes=num_nodes)
@@ -44,7 +63,8 @@ def graph_eigenbasis(edge_index, num_nodes, k=50):
 
 
 def distance_matrix(x0, y0, x1, y1):
-    """ Make a distance matrix between pairwise observations.
+    """
+    Make a distance matrix between pairwise observations.
     Note: from <http://stackoverflow.com/questions/1871536>
     """
 
@@ -59,11 +79,13 @@ def distance_matrix(x0, y0, x1, y1):
 
 
 def simple_idw(x, y, z, xi, yi, power=1):
-    """ Simple inverse distance weighted (IDW) interpolation
+    """
+    Simple inverse distance weighted (IDW) interpolation
     Weights are proportional to the inverse of the distance, so as the distance
     increases, the weights decrease rapidly.
     The rate at which the weights decrease is dependent on the value of power.
     As power increases, the weights for distant points decrease rapidly.
+    Note: from <https://gist.github.com/Majramos/5e8985adc467b80cccb0cc22d140634e>
     """
 
     dist = distance_matrix(x, y, xi, yi)
@@ -79,6 +101,10 @@ def simple_idw(x, y, z, xi, yi, power=1):
 
 
 class IDWRegressor(BaseEstimator, RegressorMixin):
+    """
+    Sklearn-compatible wrapper for IDW interpolation.
+    """
+
     def __init__(self, power=2):
         self.power = power
 
@@ -94,6 +120,16 @@ class IDWRegressor(BaseEstimator, RegressorMixin):
 
 
 class GNNRegressor(nn.Module):
+    """
+    Multi-layer GCN for spatial regression in a transductive setting.
+
+    Args:
+        in_dim (int): Input feature dimensionality.
+        hidden_dim (int): Hidden layer size.
+        out_dim (int): Number of targets.
+        n_layers (int): Number of GCN layers.
+    """
+
     def __init__(self, in_dim, hidden_dim, out_dim, n_layers=3):
         super().__init__()
         self.convs = nn.ModuleList(
