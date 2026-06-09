@@ -11,10 +11,36 @@ seed = 1
 data_dir="./data/synthetic"
 fine_gdf = gpd.read_file(f"{data_dir}/fine_regions.gpkg")
 coarse_gdf = gpd.read_file(f"{data_dir}/coarse_regions.gpkg")
-edge_index = torch.load(f"{data_dir}/edge_index.pt")
-X_climate = torch.load(f"{data_dir}/X_climate.pt")
-X_socio = torch.load(f"{data_dir}/X_socio.pt")
+edge_index = torch.load(f"{data_dir}/edge_index.pt", weights_only=True)
+X_climate = torch.load(f"{data_dir}/X_climate.pt", weights_only=True)
+X_socio = torch.load(f"{data_dir}/X_socio.pt", weights_only=True)
 nrow_fine, ncol_fine = 50, 100
+
+# plot dataset
+x_min, y_min, x_max, y_max = (
+    fine_gdf["x"].min(), fine_gdf["y"].min(),
+    fine_gdf["x"].max(), fine_gdf["y"].max(),
+)
+fields = ["X_climate1", "X_climate2", "X_climate3",
+          "X_socio1", "X_socio2", "X_socio3",
+          "y1", "y2", "y3"]
+titles = ["X_climate1 (800km)", "X_climate2 (1000km)", "X_climate3 (1200km)",
+          "X_socio1 (rho=0.85)", "X_socio2 (rho=0.88)", "X_socio3 (rho=0.9)",
+          "y1 (climate outcome)", "y2 (health outcome)", "y3 (nonlinear health)"]
+fig, axes = plt.subplots(3, 3, figsize=(20, 15))
+fig.suptitle("Synthetic Spatial Dataset", fontsize=14, fontweight="bold")
+for ax, field, title in zip(axes.flat, fields, titles):
+    values = fine_gdf[field].values.reshape(nrow_fine, ncol_fine)
+    im = ax.imshow(values, origin="lower", cmap="plasma",
+                   extent=[x_min, x_max, y_min, y_max], aspect="auto")
+    coarse_gdf.boundary.plot(ax=ax, color="black", linewidth=0.5)
+    ax.set_title(title)
+    ax.set_xlabel("Easting (m)")
+    ax.set_ylabel("Northing (m)")
+    plt.colorbar(im, ax=ax)
+plt.tight_layout()
+plt.savefig("./plot/synthetic_dataset.png", dpi=150, bbox_inches="tight")
+plt.close()
 
 
 # prepare inputs
@@ -34,7 +60,7 @@ n_coarse = int(coarse_ids.max().item()) + 1
 coarse_onehot = F.one_hot(coarse_ids, num_classes=n_coarse).float()
 c = torch.cat([rff, coarse_onehot], dim=-1)
 
-model_config = torch.load("./data/model/model.pt")
+model_config = torch.load("./data/model/model.pt", weights_only=True)
 model = GCNDAE(model_config["config"])
 model.load_state_dict(model_config["state_dict"])
 model.eval()
