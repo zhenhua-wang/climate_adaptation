@@ -1,7 +1,7 @@
 import torch
 import geopandas as gpd
 import torch.nn.functional as F
-from py.rbf_gnn_fm import GCNDAE, spatial_rff
+from py.rbf_gnn_fm import GCDAE, spatial_rff
 
 seed = 1
 
@@ -31,12 +31,12 @@ n_coarse = int(coarse_ids.max().item()) + 1
 coarse_onehot = F.one_hot(coarse_ids, num_classes=n_coarse).float()
 c = torch.cat([rff, coarse_onehot], dim=-1)
 
-# train CVAE
-config = dict(in_dim=6, hidden_dim=512, latent_dim=256, cond_dim=c.shape[-1],
+# train GCDAE
+config = dict(in_dim=6, cond_dim=c.shape[-1], hidden_dim=512, latent_dim=256,
               modality_idx=modality_idx, dropout=0.2, seed=seed)
-model = GCNDAE(config)
+model = GCDAE(config)
 model.train_model(
-    data=dict(x=X, c=c, edge_index=edge_index),
+    x=X, c=c, edge_index=edge_index,
     n_epochs=2000,
     lr=1e-3
 )

@@ -3,7 +3,7 @@ import torch
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import torch.nn.functional as F
-from py.rbf_gnn_fm import GCNDAE, spatial_rff
+from py.rbf_gnn_fm import GCDAE, spatial_rff
 
 seed = 1
 
@@ -61,7 +61,7 @@ coarse_onehot = F.one_hot(coarse_ids, num_classes=n_coarse).float()
 c = torch.cat([rff, coarse_onehot], dim=-1)
 
 model_config = torch.load("./data/model/model.pt", weights_only=True)
-model = GCNDAE(model_config["config"])
+model = GCDAE(model_config["config"])
 model.load_state_dict(model_config["state_dict"])
 model.eval()
 
