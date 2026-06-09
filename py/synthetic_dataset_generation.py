@@ -51,7 +51,7 @@ def generate_grids(nrow_fine, ncol_fine, nrow_coarse, ncol_coarse):
     # assign coarse id to fine scale grids
     idx = np.arange(nrow_fine * ncol_fine)
     row_c = (idx // ncol_fine) // (nrow_fine // nrow_coarse)
-    col_c = (idx  % ncol_fine) // (ncol_fine // ncol_coarse)
+    col_c = (idx % ncol_fine) // (ncol_fine // ncol_coarse)
     fine_gdf["coarse_id"] = row_c * ncol_coarse + col_c
     # build fine graph
     edge_index, _ = grid(height=nrow_fine, width=ncol_fine)
@@ -126,6 +126,7 @@ def make_mask(n, coarse_id, n_coarse, n_missing=5):
         ~np.isin(coarse_id, missing1),
         ~np.isin(coarse_id, missing2),
     ], axis=1)
+
 
 def generate_synthetic_dataset(seed: int, config: dict, out_dir: str) -> str:
     """
@@ -208,7 +209,6 @@ def generate_synthetic_dataset(seed: int, config: dict, out_dir: str) -> str:
         X_socio[:, i] = (1 - socio_common_frac) * f_fine + socio_common_frac * latent_cont +\
             group_effect
 
-    
     # target
     y1 = X_climate@torch.tensor(climate_weights1) + X_socio@torch.tensor(socio_weights1) + noise1*torch.randn(n)
     y2 = X_climate@torch.tensor(climate_weights2) + X_socio@torch.tensor(socio_weights2) + noise2*torch.randn(n)
