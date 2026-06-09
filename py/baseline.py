@@ -1,6 +1,10 @@
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch_geometric.nn import GCNConv
 import numpy as np
 import scipy.sparse.linalg
+from tqdm import tqdm
 from torch_geometric.utils import get_laplacian, to_scipy_sparse_matrix
 from sklearn.metrics import root_mean_squared_error
 from sklearn.base import BaseEstimator, RegressorMixin
@@ -87,3 +91,39 @@ class IDWRegressor(BaseEstimator, RegressorMixin):
         return simple_idw(
             self.X_train_[:, 0], self.X_train_[:, 1], self.y_train_,
             X[:, 0], X[:, 1], power=self.power)
+
+
+class GNNRegressor(nn.Module):
+    def __init__(self, in_dim, hidden_dim, out_dim, n_layers=3):
+        super().__init__()
+        self.convs = nn.ModuleList(
+            [GCNConv(in_dim, hidden_dim)] +
+            [GCNConv(hidden_dim, hidden_dim) for _ in range(n_layers - 1)]
+        )
+        self.out = nn.Linear(hidden_dim, out_dim)
+
+    def forward(self, x, edge_index):
+        h = x
+        for conv in self.convs:
+            h = F.relu(conv(h, edge_index))
+        return self.out(h)
+
+    def fit(self, x, edge_index, y_train, train_idx, n_epochs=300, lr=1e-3):
+        y_tensor = torch.as_tensor(y_train, dtype=torch.float32)
+        optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=n_epochs)
+        pbar = tqdm(range(n_epochs), desc="Training GNN")
+        for _ in pbar:
+            self.train()
+            optimizer.zero_grad()
+            loss = F.mse_loss(self(x, edge_index)[train_idx], y_tensor)
+            loss.backward()
+            optimizer.step()
+            scheduler.step()
+            pbar.set_postfix(loss=f"{loss.item():.4f}")
+        return self
+
+    def predict(self, x, edge_index, idx):
+        self.eval()
+        with torch.no_grad():
+            return self(x, edge_index)[idx].numpy()

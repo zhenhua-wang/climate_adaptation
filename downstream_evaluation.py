@@ -5,7 +5,8 @@ from sklearn.linear_model import Ridge
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from py.baseline import graph_eigenbasis, IDWRegressor, fit_tune_eval
+from sklearn.metrics import root_mean_squared_error
+from py.baseline import graph_eigenbasis, IDWRegressor, fit_tune_eval, GNNRegressor
 from py.evaluation import print_rmse
 
 # load datasets
@@ -68,6 +69,26 @@ yhat_test_knn_basis, best_params_knn_basis = fit_tune_eval(
     X_val=basis_full[val_idx], y_val=y_val,
     X_test=basis_full[test_idx], y_test=y_test)
 
+# gnn on coords
+x_combined = torch.cat([torch.tensor(coords), basis_full], dim=-1)
+scaler_combined = StandardScaler().fit(x_combined[train_idx])
+x_combined = torch.tensor(scaler_combined.transform(x_combined), dtype=torch.float32)
+# tune on val
+best_gnn_param, best_val_rmse = None, float("inf")
+for n_layers, hidden_dim in [(2, 32), (2, 64), (3, 64), (3, 128), (5, 64), (5, 128)]:
+    gnn = GNNRegressor(x_combined.shape[1], hidden_dim, y.shape[1], n_layers=n_layers)
+    gnn.fit(x_combined, edge_index, y_train, train_idx)
+    val_rmse = root_mean_squared_error(y[val_idx], gnn.predict(x_combined, edge_index, val_idx))
+    if val_rmse < best_val_rmse:
+        best_val_rmse = val_rmse
+        best_gnn_param = {"n_layers": n_layers, "hidden_dim": hidden_dim}
+# retrain on train+val
+trainval_idx = np.concatenate([train_idx, val_idx])
+gnn = GNNRegressor(in_dim=x_combined.shape[1], out_dim=y.shape[1], **best_gnn_param)
+y_trainval = np.concatenate([y_train, y_val])
+gnn.fit(x_combined, edge_index, y_trainval, trainval_idx)
+yhat_test_gnn = gnn.predict(x_combined, edge_index, test_idx)
+
 # ridge on embeddings
 yhat_test_ridge, best_params_ridge = fit_tune_eval(
     model_fn=lambda p: Ridge(alpha=p["alpha"], solver="lsqr"),
@@ -82,4 +103,7 @@ print_rmse("knn on coords", f"k={best_params_knn['k']}", y_test, yhat_test_knn)
 print_rmse("knn on basis",
            f"n_basis={best_params_knn_basis['n_basis']}, k={best_params_knn_basis['k']}",
            y_test, yhat_test_knn_basis)
+print_rmse("gnn on coords+basis",
+           f"hidden_dim={best_gnn_param['hidden_dim']}, n_layers={best_gnn_param['n_layers']}",
+           y_test, yhat_test_gnn)
 print_rmse("ridge with FM", f"alpha={best_params_ridge['alpha']}", y_test, yhat_test_ridge)
