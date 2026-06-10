@@ -1,4 +1,4 @@
-from py.synthetic_dataset_generation import generate_synthetic_dataset
+from src.synthetic_dataset_generation import generate_synthetic_dataset
 
 # generate dataset
 nrow_fine, ncol_fine = 50, 100

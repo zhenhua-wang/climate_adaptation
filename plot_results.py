@@ -3,7 +3,7 @@ import torch
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import torch.nn.functional as F
-from py.rbf_gnn_fm import GCDAE, spatial_rff
+from src.rbf_gnn_fm import GCDAE, spatial_rff
 
 seed = 1
 

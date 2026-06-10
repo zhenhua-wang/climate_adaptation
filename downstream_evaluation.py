@@ -6,8 +6,8 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import root_mean_squared_error
-from py.baseline import graph_eigenbasis, IDWRegressor, fit_tune_eval, GNNRegressor
-from py.evaluation import print_rmse
+from src.baseline import graph_eigenbasis, IDWRegressor, fit_tune_eval, GNNRegressor
+from src.evaluation import print_rmse
 
 # load datasets
 seed = 1
