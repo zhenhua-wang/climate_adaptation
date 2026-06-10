@@ -1,0 +1,12 @@
+geopandas==1.0.1
+matplotlib==3.10.0
+numpy==1.26.3
+pandas==2.2.3
+pyproj==3.7.0
+pytest==9.0.3
+scikit-learn==1.6.1
+scipy==1.14.1
+shapely==2.0.7
+torch==2.5.1
+torch-geometric==2.7.0
+tqdm==4.67.1
