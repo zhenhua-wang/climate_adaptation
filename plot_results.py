@@ -66,6 +66,8 @@ model.load_state_dict(model_config["state_dict"])
 model.eval()
 
 # reconstruct
+# Reconstruction RMSE without rff: 0.05175009
+# Reconstruction RMSE with rff:    0.01179664
 X_hat, _ = model.predict(X, c, edge_index)
 X_hat = X_hat.numpy()
 X_orig = X.numpy()
