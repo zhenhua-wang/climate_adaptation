@@ -31,7 +31,10 @@ def test_gpkg_geometry():
 def test_fine_grid_targets():
     fine1 = gpd.read_file(f"{data_dir}/fine_regions.gpkg")
     fine2 = gpd.read_file(f"{out_dir}/fine_regions.gpkg")
-    for col in ["y1", "y2", "y3", "x", "y"]:
+    for col in ['coarse_id', 'X_common', 'group_effect',
+                'X_climate1', 'X_climate2', 'X_climate3',
+                'X_socio1', 'X_socio2', 'X_socio3',
+                'y1', 'y2', 'y3']:
         assert fine1[col].equals(fine2[col]), f"Mismatch in {col}"
 
 
@@ -46,7 +49,11 @@ def test_data_shapes():
     X_climate = torch.load(f"{out_dir}/X_climate.pt", weights_only=False)
     X_socio = torch.load(f"{out_dir}/X_socio.pt", weights_only=False)
     edge_index = torch.load(f"{out_dir}/edge_index.pt", weights_only=False)
+    fine = gpd.read_file(f"{out_dir}/fine_regions.gpkg")
+    coarse = gpd.read_file(f"{out_dir}/coarse_regions.gpkg")
 
     assert X_climate.shape == (5000, 3), f"X_climate shape: {X_climate.shape}"
     assert X_socio.shape == (5000, 3), f"X_socio shape: {X_socio.shape}"
     assert edge_index.shape[0] == 2, "edge_index must have 2 rows"
+    assert fine.shape[0] == 5000, "fine-level data must have 5000 grids."
+    assert coarse.shape[0] == 50, "coarse-level data must have 50 grids."
