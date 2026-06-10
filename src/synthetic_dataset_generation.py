@@ -157,7 +157,6 @@ def generate_synthetic_dataset(seed: int, config: dict, out_dir: str) -> str:
         - coarse_regions.gpkg: Coarse grid.
         - edge_index.pt: Fine grid graph structure.
         - X_climate.pt, X_socio.pt: Feature tensors with missing values.
-        - mask_climate.pt, mask_socio.pt: Boolean observation masks.
         - config.pt: Config dictionary.
     """
     os.makedirs(out_dir, exist_ok=True)
@@ -236,8 +235,6 @@ def generate_synthetic_dataset(seed: int, config: dict, out_dir: str) -> str:
     torch.save(edge_index, os.path.join(out_dir, "edge_index.pt"))
     torch.save(X_climate, os.path.join(out_dir, "X_climate.pt"))
     torch.save(X_socio, os.path.join(out_dir, "X_socio.pt"))
-    torch.save(torch.tensor(mask_climate), os.path.join(out_dir, "mask_climate.pt"))
-    torch.save(torch.tensor(mask_socio), os.path.join(out_dir, "mask_socio.pt"))
     torch.save(config, os.path.join(out_dir, "config.pt"))
 
     return out_dir
