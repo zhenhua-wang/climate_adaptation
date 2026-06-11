@@ -28,6 +28,7 @@ def fit_tune_eval(model_fn, param_grid,
         yhat_test: Shape (N_test, n_targets), predition results.
         best_params: Parameter dict with lowest RMSE on validation dataset.
     """
+    # fit on train data and tune on val dataset
     best_params, best_rmse = None, float("inf")
     for params in param_grid:
         model = model_fn(params).fit(X_train, y_train)
@@ -35,6 +36,7 @@ def fit_tune_eval(model_fn, param_grid,
         if rmse < best_rmse:
             best_rmse, best_params = rmse, params
 
+    # refit on both train and val data
     X_trainval = np.concatenate([X_train, X_val])
     y_trainval = np.concatenate([y_train, y_val])
     model = model_fn(best_params).fit(X_trainval, y_trainval)

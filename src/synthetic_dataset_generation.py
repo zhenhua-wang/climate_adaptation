@@ -40,6 +40,7 @@ def generate_grids(nrow_fine, ncol_fine, nrow_coarse, ncol_coarse):
     )
     fine_gdf["x"] = fine_gdf.geometry.centroid.x
     fine_gdf["y"] = fine_gdf.geometry.centroid.y
+
     # aggregate to coarse scale
     x_coarse = x_edges[::ncol_fine // ncol_coarse]
     y_coarse = y_edges[::nrow_fine // nrow_coarse]
@@ -48,11 +49,13 @@ def generate_grids(nrow_fine, ncol_fine, nrow_coarse, ncol_coarse):
         for j in range(nrow_coarse) for i in range(ncol_coarse)
     ]
     coarse_gdf = gpd.GeoDataFrame(geometry=cells_coarse, crs="EPSG:5070")
+
     # assign coarse id to fine scale grids
     idx = np.arange(nrow_fine * ncol_fine)
     row_c = (idx // ncol_fine) // (nrow_fine // nrow_coarse)
     col_c = (idx % ncol_fine) // (ncol_fine // ncol_coarse)
     fine_gdf["coarse_id"] = row_c * ncol_coarse + col_c
+
     # build fine graph
     edge_index, _ = grid(height=nrow_fine, width=ncol_fine)
     lap_index, lap_weight = get_laplacian(edge_index, normalization=None)
