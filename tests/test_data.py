@@ -1,10 +1,11 @@
 import os
-import hashlib
 import torch
+import numpy as np
 import geopandas as gpd
 from src.synthetic_dataset_generation import generate_synthetic_dataset
 
 
+float_tolerance = 1e-3
 data_dir = "./data/synthetic"
 config = torch.load(f"{data_dir}/config.pt", weights_only=False)
 out_dir = generate_synthetic_dataset(seed=2, config=config, out_dir="./tests/output")
@@ -17,7 +18,7 @@ def test_pt_files():
         generated = torch.load(f"{out_dir}/{fname}", weights_only=False)
         assert torch.allclose(
             saved, generated,
-            atol=1e-3, rtol=1e-3,
+            atol=float_tolerance, rtol=float_tolerance,
             equal_nan=True), f"Values are not close in {fname}"
 
 
@@ -35,10 +36,9 @@ def test_fine_grid_fields():
                 'X_climate1', 'X_climate2', 'X_climate3',
                 'X_socio1', 'X_socio2', 'X_socio3',
                 'y1', 'y2', 'y3']:
-        assert torch.allclose(
-            torch.as_tensor(fine1[col].to_numpy()),
-            torch.as_tensor(fine2[col].to_numpy()),
-            atol=1e-3, rtol=1e-3,
+        assert np.allclose(
+            fine1[col], fine2[col],
+            atol=float_tolerance, rtol=float_tolerance,
             equal_nan=True), f"Values are not close in {col}"
 
 
