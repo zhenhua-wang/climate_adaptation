@@ -95,7 +95,7 @@ def car_graph(L, rho=0.9):
     """
     n = L.shape[0]
     A = scipy.sparse.diags(L.diagonal()) - L
-    D_inv = scipy.sparse.diags(1.0 / L.diagonal().clip(min=1))
+    D_inv = scipy.sparse.diags(1.0 / L.diagonal())
     W = D_inv @ A
     Q = scipy.sparse.eye(n) - rho * W
     z = np.random.randn(n)
