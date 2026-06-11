@@ -20,17 +20,19 @@ pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cpu
 ## Reproduce this project
 
 ```sh
-# to generate the synthetic dataset
+# Generate the synthetic dataset
 python build_datasets.py
 
-# to train the GCDAE model and produce the embeddings
+# Train the GCDAE model and produce the embeddings
+# In this script, model is trained using model.train_model()
+# and embeddings are extracted and saved using model.save_checkpoints()
 python create_embeddings.py
 
-# to run the downstream evaluation
+# Run the downstream evaluation
 python downstream_evaluation.py
 
-# (optional) plot the synthetic dataset and reconstructed dataset
-# plots are stored in plot/
+# (optional) Plot the synthetic dataset and reconstructed dataset
+# Plots are stored in plot/
 python plot_results.py
 ```
 
@@ -40,6 +42,7 @@ python plot_results.py
 - `src/rbf_gnn_fm.py`: Source code that defines `GCDAE` class and the function that creates Random Fourier Features for a set of coordinates.
 - `src/evaluation.py`: Source code that defines helper functions for evaluation
 - `src/baseline.py`: Source code that defines baseline models including KNN, IDW, GNN, and spatial EOFs. This also includes a helper function `fit_tune_eval` that automates the training, tuning (on a set of parameters) and evaluation process.
+  - The IDW method is from https://gist.github.com/Majramos/5e8985adc467b80cccb0cc22d140634e.
 
 ## Saved dataset and model description
 
