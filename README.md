@@ -66,7 +66,7 @@ python plot_results.py
 To made evaluation efficient, I've included the following programmatic checks.
 - `tests/test_data.py`
   - **Reproducibility**
-    - Note that a hash check is not reliable for my synthetic data because of numerical precision issues. For example, the `car_graph` function uses a numerical solver for a sparse linear system, `scipy.sparse.linalg.cg`, and `matern_continuous` relies on several floating-point operations. These computations can produce slightly different results across machines with different CPU architectures.
+    - Note that a hash check is not reliable for my synthetic data because of numerical precision issues. For example, the `car_graph` function uses a numerical solver for a sparse linear system (`scipy.sparse.linalg.cg`) and `matern_continuous` relies on several floating-point operations. These computations can produce slightly different results across machines with different CPU architectures.
     - Instead, I check whether the values in the saved `.pt` files are close to those in newly generated data produced with the same seed.
     - For saved spatial datasets (`.gpkg`), I also compare the geometry and relevant fields (`coarse_id`, `X_common`, `group_effect`, `X_climate1–3`, `X_socio1–3`, `y1–3`) to those in newly generated data produced with the same seed.
   - **Schema/shape validity**

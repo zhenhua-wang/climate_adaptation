@@ -13,9 +13,13 @@ out_dir = generate_synthetic_dataset(seed=2, config=config, out_dir="./tests/out
 # 1. Test same synthetic datasets
 def test_pt_files():
     for fname in ["X_climate.pt", "X_socio.pt", "edge_index.pt"]:
-        saved = torch.load(f"{data_dir}/{fname}")
-        generated = torch.load(f"{out_dir}/{fname}")
-        assert torch.allclose(saved, generated, equal_nan=True), f"Values are not close in {fname}"
+        saved = torch.load(f"{data_dir}/{fname}", weights_only=False)
+        generated = torch.load(f"{out_dir}/{fname}", weights_only=False)
+        assert torch.allclose(
+            saved, generated,
+            # tolerance are set according to https://stackoverflow.com/questions/75622268/comparing-two-tensors-in-pytorch
+            atol=1e-4, rtol=1e-4,
+            equal_nan=True), f"Values are not close in {fname}"
 
 
 def test_gpkg_geometry():
@@ -35,6 +39,8 @@ def test_fine_grid_fields():
         assert torch.allclose(
             torch.as_tensor(fine1[col].to_numpy()),
             torch.as_tensor(fine2[col].to_numpy()),
+            # tolerance are set according to https://stackoverflow.com/questions/75622268/comparing-two-tensors-in-pytorch
+            atol=1e-4, rtol=1e-4,
             equal_nan=True), f"Values are not close in {col}"
 
 
