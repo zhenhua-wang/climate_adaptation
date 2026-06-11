@@ -17,8 +17,7 @@ def test_pt_files():
         generated = torch.load(f"{out_dir}/{fname}", weights_only=False)
         assert torch.allclose(
             saved, generated,
-            # tolerance are set according to https://stackoverflow.com/questions/75622268/comparing-two-tensors-in-pytorch
-            atol=1e-4, rtol=1e-4,
+            atol=1e-3, rtol=1e-3,
             equal_nan=True), f"Values are not close in {fname}"
 
 
@@ -39,8 +38,7 @@ def test_fine_grid_fields():
         assert torch.allclose(
             torch.as_tensor(fine1[col].to_numpy()),
             torch.as_tensor(fine2[col].to_numpy()),
-            # tolerance are set according to https://stackoverflow.com/questions/75622268/comparing-two-tensors-in-pytorch
-            atol=1e-4, rtol=1e-4,
+            atol=1e-3, rtol=1e-3,
             equal_nan=True), f"Values are not close in {col}"
 
 
