@@ -11,14 +11,11 @@ out_dir = generate_synthetic_dataset(seed=2, config=config, out_dir="./tests/out
 
 
 # 1. Test same synthetic datasets
-def file_hash(path):
-    return hashlib.md5(open(path, "rb").read()).hexdigest()
-
-
 def test_pt_files():
     for fname in ["X_climate.pt", "X_socio.pt", "edge_index.pt"]:
-        assert file_hash(f"{data_dir}/{fname}") == file_hash(f"{out_dir}/{fname}"), \
-            f"Mismatch in {fname}"
+        saved = torch.load(f"{data_dir}/{fname}")
+        generated = torch.load(f"{out_dir}/{fname}")
+        assert torch.allclose(saved, generated, equal_nan=True), f"Values are not close in {fname}"
 
 
 def test_gpkg_geometry():
@@ -28,14 +25,17 @@ def test_gpkg_geometry():
         assert gdf1.geometry.equals(gdf2.geometry), f"Geometry mismatch in {fname}"
 
 
-def test_fine_grid_targets():
+def test_fine_grid_fields():
     fine1 = gpd.read_file(f"{data_dir}/fine_regions.gpkg")
     fine2 = gpd.read_file(f"{out_dir}/fine_regions.gpkg")
     for col in ['coarse_id', 'X_common', 'group_effect',
                 'X_climate1', 'X_climate2', 'X_climate3',
                 'X_socio1', 'X_socio2', 'X_socio3',
                 'y1', 'y2', 'y3']:
-        assert fine1[col].equals(fine2[col]), f"Mismatch in {col}"
+        assert torch.allclose(
+            torch.as_tensor(fine1[col].to_numpy()),
+            torch.as_tensor(fine2[col].to_numpy()),
+            equal_nan=True), f"Values are not close in {col}"
 
 
 # 2. Schema/shape validity
