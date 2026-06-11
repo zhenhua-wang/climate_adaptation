@@ -14,7 +14,7 @@ conda create -n gcdae python=3.11
 conda activate gcdae
 
 # Install the required python packages
-pip install -r requirements.txt
+pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple
 ```
 
 ## Reproduce this project
