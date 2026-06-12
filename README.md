@@ -91,3 +91,6 @@ To run these programmatic checks, run
 ```sh
 pytest -v
 ```
+
+## AI Assistance and Disclosure
+ChatGPT is only used for searching tedious functions, such as plotting utilities and NumPy functions. For writing, ChatGPT is used for proofreading.
